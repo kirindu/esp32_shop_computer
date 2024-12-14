@@ -18,6 +18,7 @@ bool doorState;     // Estado de la puerta
 float humedad, tempC, tempF; // Declaramos aqui estas variables para poder llamarlas desde sensor_dht11.h com extern y poder alimentarlas desde alli
 
 unsigned long t;
+unsigned long t2;
 
 void setup()
 {
@@ -31,8 +32,6 @@ void setup()
   // MQTT
   client.setServer(mqtt_server, mqtt_port); // Le pasamos las variables que estan en env.h
   client.setCallback(callback);             // Empezamos a escuchar nuestras subscripciones
-
-  //
 
   initDHT(); // Inicializamos el sensor de temperatura
 
@@ -48,7 +47,7 @@ void setup()
 void loop()
 {
 
-  if (!client.connected())
+  if (!client.connected())  
   {
     reconnectToBroker();
   }
@@ -57,35 +56,37 @@ void loop()
     client.connect("ESP32-SHOP-COMPUTER");
   }
 
-  doorState = digitalRead(sensorDoor); // Leemos el estado del sensor de la puerta
-
-  if (!doorState)
-  { // Si la puerta esta cerrada se enciende el led rojo
-    digitalWrite(redLED, HIGH);
-    digitalWrite(internalLED, LOW);
-
-    //   digitalWrite(pinRelay, HIGH);
-  }
-  else
+  if (millis() - t2 >= 1000) // Cada 1000ms leemos el estado de la puerta
   {
-    digitalWrite(redLED, LOW);
-    digitalWrite(internalLED, HIGH);
+    doorState = digitalRead(sensorDoor); // Leemos el estado del actual de la puerta
 
-    //  digitalWrite(pinRelay, LOW);
+    if (!doorState)
+    { // Si la puerta esta cerrada se enciende el led rojo
+      digitalWrite(redLED, HIGH);
+      digitalWrite(internalLED, LOW);
+      client.publish("ace_disposal/shop_computer/sensor/door", "on"); // Publicamos aqui
+    }
+    else
+    {
+      digitalWrite(redLED, LOW);
+      digitalWrite(internalLED, HIGH);
+      client.publish("ace_disposal/shop_computer/sensor/door", "off"); // Publicamos aqui
+    }
+
+    t2 = millis(); // inicializamos de nuevo el contador interno
   }
 
-  // Cada 10 Segundos leemos el sensor de temperatura y lo mandamos
   if (millis() - t >= 2000)
   {
-    readDHT11();  // Leemos los datos del sensor de temperatura
+    readDHT11(); // Leemos los datos del sensor de temperatura
 
     // Publicamos aqui las medidas del DHT11
     String tempStrF = String(tempF, 2);
     String humStrF = String(humedad, 2);
+  
+    client.publish("ace_disposal/shop_computer/sensor/humidity", humStrF.c_str());  // Publicamos aqui
     client.publish("ace_disposal/shop_computer/sensor/temperature", tempStrF.c_str()); // Publicamos aqui
-    client.publish("ace_disposal/shop_computer/sensor/temperature", humStrF.c_str()); // Publicamos aqui
-    
-    
+
     // Y para probar lo que se esta enviando podemos hacerlo con:  mosquitto_sub -h 5.78.130.1 -p 1883 -t ace_disposal/shop_computer/sensor/temperature -u "userShop" -P "qwerty123"
     t = millis(); // inicializamos de nuevo el contador interno
   }
