@@ -73,6 +73,15 @@ void loop()
       client.publish("ace_disposal/shop_computer/sensor/door", "off"); // Publicamos aqui
     }
 
+    // Publicamos el estado del Relay
+
+    if(digitalRead(pinRelay)) {
+      client.publish("ace_disposal/shop_computer/sensor/relay_status", "on");
+    }else {
+      client.publish("ace_disposal/shop_computer/sensor/relay_status", "off");
+    }
+    //
+
     t2 = millis(); // inicializamos de nuevo el contador interno
   }
 

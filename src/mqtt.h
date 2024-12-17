@@ -48,7 +48,7 @@ void callback(char *topic, byte *message, unsigned int length)
         messageTemp += (char)message[i];
     }
 
-    if (String(topic) == "ace_disposal/shop_computer/sensor/relay")
+    if (String(topic) == "ace_disposal/shop_computer/sensor/relay") // Si un cliente publica y manda un "on" o un "off" se enciede o apaga el relay
     {
         if (messageTemp == "on")
         {
