@@ -2,12 +2,12 @@
 #include <Arduino.h>
 #include <ArduinoJson.h>
 // #include <DHT.h>
-#include "sensor_dht11.h"
+#include "sensor_dht22.h"
 #include "wifimqtt.h"
 #include "mqtt.h"
 
 // Declaracion de variables
-const byte redLED = 14;
+const byte redLED = 14; // Este led rojo se encendera cuando la puerta este enllavada
 // const byte greenLED = 14;
 const byte internalLED = 2;
 const byte sensorDoor = 25;
@@ -15,7 +15,7 @@ const byte sensorDoor = 25;
 byte pinRelay = 27; // No se le agrega const si pienzas extraerla como extern de otra libreria
 bool doorState;     // Estado de la puerta
 
-float humedad, tempC, tempF; // Declaramos aqui estas variables para poder llamarlas desde sensor_dht11.h com extern y poder alimentarlas desde alli
+float humedad, tempC, tempF; // Declaramos aqui estas variables para poder llamarlas desde sensor_dht22.h com extern y poder alimentarlas desde alli
 
 unsigned long t;
 unsigned long t2;
@@ -62,22 +62,24 @@ void loop()
 
     if (!doorState)
     { // Si la puerta esta cerrada se enciende el led rojo
-      digitalWrite(redLED, HIGH);
+     // digitalWrite(redLED, HIGH);
       digitalWrite(internalLED, LOW);
       client.publish("ace_disposal/shop_computer/sensor/door", "on"); // Publicamos aqui
     }
     else
     {
-      digitalWrite(redLED, LOW);
+    //  digitalWrite(redLED, LOW);
       digitalWrite(internalLED, HIGH);
       client.publish("ace_disposal/shop_computer/sensor/door", "off"); // Publicamos aqui
     }
 
     // Publicamos el estado del Relay
 
-    if(digitalRead(pinRelay)) {
+    if(digitalRead(pinRelay)) { // Leemos el estado de la salida, y publicamos
+      digitalWrite(redLED, HIGH);
       client.publish("ace_disposal/shop_computer/sensor/relay_status", "on");
     }else {
+      digitalWrite(redLED, LOW);
       client.publish("ace_disposal/shop_computer/sensor/relay_status", "off");
     }
     //
@@ -87,9 +89,9 @@ void loop()
 
   if (millis() - t >= 2000)
   {
-    readDHT11(); // Leemos los datos del sensor de temperatura
+    readDHT22(); // Leemos los datos del sensor de temperatura
 
-    // Publicamos aqui las medidas del DHT11
+    // Publicamos aqui las medidas del DHT22
     String tempStrF = String(tempF, 2);
     String humStrF = String(humedad, 2);
   

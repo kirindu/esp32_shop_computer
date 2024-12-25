@@ -1,4 +1,4 @@
-#include <Arduino.h>
+    #include <Arduino.h>
 #include <PubSubClient.h>
 #include <ArduinoJson.h>
 #include <Adafruit_Sensor.h>
@@ -14,19 +14,19 @@ extern float tempC;
 extern float tempF;
 
 // Tipo de Sensor de temperatur/humedad
-DHT dht(DHTPIN, DHT11);
+DHT dht(DHTPIN, DHT22);
 
 void initDHT() {
     dht.begin();
 }
 
-void readDHT11() {
+void readDHT22() {
     humedad = dht.readHumidity();
     tempC = dht.readTemperature();
     tempF = dht.readTemperature(true);
 
     if(isnan(humedad) | isnan(tempC) | isnan(tempF)) {
-        Serial.println("Error en DHT11");
+        Serial.println("Error en DHT22");
     }else {
         Serial.print("Humedad: "); Serial.print(humedad); Serial.print(" %");
         Serial.println(" ");
