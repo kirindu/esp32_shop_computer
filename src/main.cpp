@@ -47,14 +47,10 @@ void setup()
 void loop()
 {
 
-  if (!client.connected())  
-  {
-    reconnectToBroker();
-  }
-  if (!client.loop())
-  {
-    client.connect("ESP32-SHOP-COMPUTER");
-  }
+ if (!client.connected()) {
+  reconnectToBroker();   // ✅ reconecta SIEMPRE con user/pass
+}
+client.loop();            // ✅ solo procesa
 
   if (millis() - t2 >= 1000) // Cada 1000ms leemos el estado de la puerta
   {

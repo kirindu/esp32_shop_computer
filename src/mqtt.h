@@ -19,7 +19,8 @@ void reconnectToBroker() // Nos conectamos al Broker y nos sucribimos
     {
 
         Serial.println("Attempting MQTT conection...");
-        clientID += String(random(0xffff), HEX);
+        clientID = "ESP32-";
+        clientID += String((uint32_t)ESP.getEfuseMac(), HEX);
 
         if (client.connect(clientID.c_str(), mqtt_user, mqtt_password))
         {
