@@ -3,6 +3,7 @@
 #include <ArduinoJson.h>
 #include <WiFi.h>
 #include "env_mqtt.h"
+#include "wifimqtt.h"  // Agrega esto para acceder a connectWiFi()
 
 String topic = "sensor/temp";
 String clientID;
@@ -12,24 +13,24 @@ PubSubClient client(espClient);
 
 extern byte pinRelay; // Con extern podemos traernos la referencia de las variables declaradas en el main.cpp
 
-void reconnectToBroker() // Nos conectamos al Broker y nos sucribimos
-{
+void reconnectToBroker() {  // Nos conectamos al Broker y nos suscribimos
+    if (WiFi.status() != WL_CONNECTED) {  // Nueva: Verifica WiFi primero
+        Serial.println("WiFi no conectado. Reconectando WiFi antes de MQTT...");
+        if (!connectWiFi()) {
+            return;  // Si falla, sale y lo intentará en el próximo loop
+        }
+    }
 
-    while (!client.connected())
-    {
-
-        Serial.println("Attempting MQTT conection...");
+    while (!client.connected()) {
+        Serial.println("Attempting MQTT connection...");
         clientID = "ESP32-";
         clientID += String((uint32_t)ESP.getEfuseMac(), HEX);
 
-        if (client.connect(clientID.c_str(), mqtt_user, mqtt_password))
-        {
+        if (client.connect(clientID.c_str(), mqtt_user, mqtt_password)) {
             // Nos subscribimos a los sensores necesarios
             Serial.println("Conectado al Broker");
             client.subscribe("ace_disposal/shop_computer/sensor/relay"); // Por el momento seria el unico suscrito porque desde vue3 lo controlaremos
-        }
-        else
-        {
+        } else {
             Serial.println("No se pudo conectar al Broker");
             Serial.println(client.state());
             Serial.println("Reintento en 5 segundos");

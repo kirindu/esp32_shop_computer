@@ -19,38 +19,49 @@ float humedad, tempC, tempF; // Declaramos aqui estas variables para poder llama
 
 unsigned long t;
 unsigned long t2;
+unsigned long lastWiFiCheck = 0;  // Nueva: Para verificar WiFi periódicamente
 
-void setup()
-{
+void setup() {
+    Serial.begin(115200);
+    Serial.println("<ESP32 Loading>");
 
-  Serial.begin(115200);
+    connectWiFi(); // Nos conectamos con esta funcion que esta en wifimqtt.h
 
-  Serial.println("<ESP32 Loading>");
+    // MQTT
+    client.setServer(mqtt_server, mqtt_port); // Le pasamos las variables que estan en env.h
+    client.setCallback(callback);             // Empezamos a escuchar nuestras subscripciones
 
-  connectWiFi(); // Nos conectamos con esta funcion que esta en wifimqtt.h
+    initDHT(); // Inicializamos el sensor de temperatura
 
-  // MQTT
-  client.setServer(mqtt_server, mqtt_port); // Le pasamos las variables que estan en env.h
-  client.setCallback(callback);             // Empezamos a escuchar nuestras subscripciones
+    pinMode(redLED, OUTPUT);
+    // pinMode(greenLED, OUTPUT);
+    pinMode(internalLED, OUTPUT);
+    pinMode(sensorDoor, INPUT_PULLUP);
+    pinMode(pinRelay, OUTPUT);
 
-  initDHT(); // Inicializamos el sensor de temperatura
-
-  pinMode(redLED, OUTPUT);
-  // pinMode(greenLED, OUTPUT);
-  pinMode(internalLED, OUTPUT);
-  pinMode(sensorDoor, INPUT_PULLUP);
-  pinMode(pinRelay, OUTPUT);
-
-  t = millis();
+    t = millis();
+    t2 = millis();  // Inicializa t2 también
+    lastWiFiCheck = millis();  // Inicializa el checker de WiFi
 }
 
 void loop()
 {
 
- if (!client.connected()) {
-  reconnectToBroker();   // ✅ reconecta SIEMPRE con user/pass
-}
-client.loop();            // ✅ solo procesa
+  // Nueva: Verifica WiFi periódicamente (cada 5s para no sobrecargar)
+    if (millis() - lastWiFiCheck >= 5000) {
+        if (WiFi.status() != WL_CONNECTED) {
+            Serial.println("WiFi desconectado. Intentando reconectar...");
+            connectWiFi();  // Reconecta WiFi
+        }
+        lastWiFiCheck = millis();
+    }
+
+
+// MQTT: Reconecta si es necesario (ahora maneja WiFi internamente)
+    if (!client.connected()) {
+        reconnectToBroker();   // ✅ reconecta SIEMPRE con user/pass
+    }
+    client.loop();            // ✅ solo procesa
 
   if (millis() - t2 >= 1000) // Cada 1000ms leemos el estado de la puerta
   {
